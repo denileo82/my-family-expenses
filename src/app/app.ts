@@ -17,14 +17,23 @@ export class App {
   loading = this.service.loading;
   error = this.service.error;
 
+  // Modal de nova despesa
+  expenseModalOpen = signal(false);
   selectedId = signal<string | null>(null);
-  private amountInput = viewChild<ElementRef<HTMLInputElement>>('amountBox');
   amount = signal('');
   date = signal(this.todayStr());
+  description = signal('');
   saving = signal(false);
   saveError = signal<string | null>(null);
-  editingMaxId = signal<string | null>(null);
-  maxValue = signal('');
+  private amountInput = viewChild<ElementRef<HTMLInputElement>>('amountBox');
+
+  // Modal de categorias
+  categoriesModalOpen = signal(false);
+  editingCategoryId = signal<string | null>(null); // null = nova categoria
+  catName = signal('');
+  catMax = signal('');
+  catSaving = signal(false);
+  catError = signal<string | null>(null);
 
   selected = computed<CategoryWithSpent | null>(() =>
     this.categories().find((c) => c.id === this.selectedId()) ?? null,
@@ -36,19 +45,19 @@ export class App {
     this.service.load();
   }
 
-  select(id: string): void {
+  // ===== Despesa =====
+  openExpenseModal(id: string): void {
     this.selectedId.set(id);
+    this.amount.set('');
+    this.date.set(this.todayStr());
+    this.description.set('');
     this.saveError.set(null);
-    // Foca a caixa de valor após a renderização
-    setTimeout(() => {
-      const input = this.amountInput()?.nativeElement;
-      input?.focus();
-      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    });
+    this.expenseModalOpen.set(true);
+    setTimeout(() => this.amountInput()?.nativeElement.focus());
   }
 
-  onAmountInput(value: string): void {
-    this.amount.set(value);
+  closeExpenseModal(): void {
+    this.expenseModalOpen.set(false);
   }
 
   async add(): Promise<void> {
@@ -58,9 +67,8 @@ export class App {
     this.saving.set(true);
     this.saveError.set(null);
     try {
-      await this.service.addExpense(id, value, this.date());
-      this.amount.set('');
-      this.date.set(this.todayStr());
+      await this.service.addExpense(id, value, this.date(), this.description().trim() || null);
+      this.expenseModalOpen.set(false);
     } catch (e: any) {
       this.saveError.set(e.message ?? 'Erro ao salvar');
     } finally {
@@ -68,32 +76,69 @@ export class App {
     }
   }
 
-  private todayStr(): string {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
   async remove(id: string): Promise<void> {
     await this.service.deleteExpense(id);
   }
 
-  startEditMax(c: CategoryWithSpent): void {
-    this.editingMaxId.set(c.id);
-    this.maxValue.set(c.max_monthly_amount ? String(c.max_monthly_amount) : '');
+  // ===== Categorias =====
+  openCategoriesModal(): void {
+    this.editingCategoryId.set(null);
+    this.catError.set(null);
+    this.categoriesModalOpen.set(true);
   }
 
-  async saveMax(): Promise<void> {
-    const id = this.editingMaxId();
-    if (!id) return;
-    const max = Number(this.maxValue().replace(',', '.')) || 0;
-    await this.service.updateMax(id, max);
-    this.editingMaxId.set(null);
+  closeCategoriesModal(): void {
+    this.categoriesModalOpen.set(false);
   }
 
-  cancelEditMax(): void {
-    this.editingMaxId.set(null);
+  startEditCategory(id: string | null): void {
+    this.editingCategoryId.set(id);
+    this.catError.set(null);
+    if (id) {
+      const c = this.categories().find((x) => x.id === id);
+      this.catName.set(c?.name ?? '');
+      this.catMax.set(c?.max_monthly_amount ? String(c.max_monthly_amount) : '');
+    } else {
+      this.catName.set('');
+      this.catMax.set('');
+    }
   }
 
+  async saveCategory(): Promise<void> {
+    const name = this.catName().trim();
+    if (!name) {
+      this.catError.set('Informe o nome da categoria');
+      return;
+    }
+    const max = Number(this.catMax().replace(',', '.')) || 0;
+    this.catSaving.set(true);
+    this.catError.set(null);
+    try {
+      const id = this.editingCategoryId();
+      if (id) {
+        await this.service.updateCategory(id, name, max);
+      } else {
+        await this.service.createCategory(name, max);
+      }
+      this.editingCategoryId.set(null);
+    } catch (e: any) {
+      this.catError.set(e.message ?? 'Erro ao salvar');
+    } finally {
+      this.catSaving.set(false);
+    }
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    if (!confirm('Excluir categoria e todas as suas despesas?')) return;
+    try {
+      await this.service.deleteCategory(id);
+      this.editingCategoryId.set(null);
+    } catch (e: any) {
+      this.catError.set(e.message ?? 'Erro ao excluir');
+    }
+  }
+
+  // ===== Helpers =====
   barColor(c: CategoryWithSpent): string {
     if (c.max_monthly_amount <= 0) return 'bg-gray-300';
     if (c.percent >= 100) return 'bg-red-500';
@@ -106,5 +151,10 @@ export class App {
     if (c.percent >= 100) return 'text-red-600';
     if (c.percent >= 70) return 'text-yellow-600';
     return 'text-emerald-600';
+  }
+
+  private todayStr(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 }

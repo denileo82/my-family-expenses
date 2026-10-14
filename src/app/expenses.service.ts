@@ -37,10 +37,10 @@ export class ExpensesService {
     }
   }
 
-  async addExpense(categoryId: string, amount: number, expenseDate: string): Promise<void> {
+  async addExpense(categoryId: string, amount: number, expenseDate: string, name: string | null): Promise<void> {
     const { error } = await supabase
       .from('expense')
-      .insert({ category_id: categoryId, amount, expense_date: expenseDate, name: null });
+      .insert({ category_id: categoryId, amount, expense_date: expenseDate, name });
     if (error) throw error;
     await this.load();
   }
@@ -56,6 +56,29 @@ export class ExpensesService {
       .from('category')
       .update({ max_monthly_amount: max })
       .eq('id', categoryId);
+    if (error) throw error;
+    await this.load();
+  }
+
+  async createCategory(name: string, max: number): Promise<void> {
+    const { error } = await supabase
+      .from('category')
+      .insert({ name, max_monthly_amount: max });
+    if (error) throw error;
+    await this.load();
+  }
+
+  async updateCategory(categoryId: string, name: string, max: number): Promise<void> {
+    const { error } = await supabase
+      .from('category')
+      .update({ name, max_monthly_amount: max })
+      .eq('id', categoryId);
+    if (error) throw error;
+    await this.load();
+  }
+
+  async deleteCategory(categoryId: string): Promise<void> {
+    const { error } = await supabase.from('category').delete().eq('id', categoryId);
     if (error) throw error;
     await this.load();
   }

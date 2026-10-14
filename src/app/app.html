@@ -1,10 +1,18 @@
-<div class="mx-auto max-w-md min-h-screen bg-gray-50 px-4 pb-24 pt-6">
-  <header class="mb-4">
-    <h1 class="text-2xl font-bold text-gray-900">💸 Despesas</h1>
-    <p class="text-sm text-gray-500">
-      Total gasto no mês:
-      <span class="font-semibold text-gray-700">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
-    </p>
+<div class="mx-auto max-w-md min-h-screen bg-gray-50 px-4 pb-10 pt-6">
+  <header class="mb-4 flex items-start justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">💸 Despesas</h1>
+      <p class="text-sm text-gray-500">
+        Total gasto no mês:
+        <span class="font-semibold text-gray-700">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
+      </p>
+    </div>
+    <button
+      (click)="openCategoriesModal()"
+      class="rounded-lg border border-gray-200 bg-white p-2 text-gray-500 shadow-sm transition active:scale-95 hover:text-indigo-600"
+      aria-label="Gerenciar categorias"
+      title="Gerenciar categorias"
+    >⚙️</button>
   </header>
 
   @if (error()) {
@@ -15,116 +23,55 @@
     <div class="py-10 text-center text-gray-400">Carregando...</div>
   }
 
-  <!-- Categorias -->
+  <!-- Categorias (tela principal) -->
   <div class="grid grid-cols-2 gap-3">
     @for (c of categories(); track c.id) {
       <button
-        (click)="select(c.id)"
-        class="rounded-xl border p-3 text-left transition active:scale-95"
-        [class.border-indigo-500]="selectedId() === c.id"
-        [class.bg-indigo-50]="selectedId() === c.id"
-        [class.border-gray-200]="selectedId() !== c.id"
-        [class.bg-white]="selectedId() !== c.id"
+        (click)="openExpenseModal(c.id)"
+        class="rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition active:scale-95"
       >
-        <div class="flex items-center justify-between">
-          <span class="font-semibold text-gray-800">{{ c.name }}</span>
-          <button
-            (click)="startEditMax(c); $event.stopPropagation()"
-            class="text-xs text-gray-400 hover:text-indigo-500"
-            aria-label="Editar limite"
-          >✎</button>
-        </div>
+        <span class="font-semibold text-gray-800">{{ c.name }}</span>
 
-        @if (editingMaxId() === c.id) {
-          <div class="mt-2 flex gap-1" (click)="$event.stopPropagation()">
-            <input
-              type="number"
-              inputmode="decimal"
-              step="0.01"
-              [value]="maxValue()"
-              (input)="maxValue.set($any($event.target).value)"
-              (keyup.enter)="saveMax()"
-              class="w-full rounded border border-gray-300 px-2 py-1 text-sm"
-              placeholder="Limite mensal"
-            />
-            <button (click)="saveMax()" class="rounded bg-indigo-500 px-2 text-xs text-white">✓</button>
-            <button (click)="cancelEditMax()" class="rounded bg-gray-200 px-2 text-xs">✕</button>
-          </div>
-        } @else {
+        @if (c.max_monthly_amount > 0) {
           <div class="mt-1 text-xs" [class]="statusColor(c)">
-            @if (c.max_monthly_amount > 0) {
-              {{ c.spent | currency:'BRL':'symbol':'1.2-2' }} / {{ c.max_monthly_amount | currency:'BRL':'symbol':'1.2-2' }}
+            {{ c.spent | currency:'BRL':'symbol':'1.2-2' }} / {{ c.max_monthly_amount | currency:'BRL':'symbol':'1.2-2' }}
+          </div>
+          <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+            <div class="h-full rounded-full transition-all" [class]="barColor(c)" [style.width.%]="c.percent"></div>
+          </div>
+          <div class="mt-1 text-[11px] text-gray-500">
+            @if (c.remaining > 0) {
+              faltam {{ c.remaining | currency:'BRL':'symbol':'1.2-2' }}
+              · {{ c.perDay | currency:'BRL':'symbol':'1.2-2' }}/dia
             } @else {
-              {{ c.spent | currency:'BRL':'symbol':'1.2-2' }} — sem limite
+              limite estourado
             }
           </div>
-
-          @if (c.max_monthly_amount > 0) {
-            <div class="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-              <div class="h-full rounded-full transition-all" [class]="barColor(c)" [style.width.%]="c.percent"></div>
-            </div>
-            <div class="mt-1 text-[11px] text-gray-500">
-              @if (c.remaining > 0) {
-                faltam {{ c.remaining | currency:'BRL':'symbol':'1.2-2' }}
-                · {{ c.perDay | currency:'BRL':'symbol':'1.2-2' }}/dia
-              } @else {
-                limite estourado
-              }
-            </div>
-          }
+        } @else {
+          <div class="mt-1 text-xs text-gray-500">
+            {{ c.spent | currency:'BRL':'symbol':'1.2-2' }} — sem limite
+          </div>
         }
       </button>
     }
   </div>
 
-  <!-- Adicionar despesa -->
-  <div class="sticky bottom-0 mt-6 bg-gray-50 py-3">
-    <div class="flex gap-2">
-      <input
-        type="date"
-        [value]="date()"
-        (input)="date.set($any($event.target).value)"
-        class="w-36 shrink-0 rounded-xl border border-gray-300 bg-white px-2 py-3 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none"
-      />
-      <input
-        #amountBox
-        type="number"
-        inputmode="decimal"
-        step="0.01"
-        min="0"
-        [value]="amount()"
-        (input)="onAmountInput($any($event.target).value)"
-        (keyup.enter)="add()"
-        placeholder="Valor (R$)"
-        class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-lg focus:border-indigo-500 focus:outline-none"
-      />
-      <button
-        (click)="add()"
-        [disabled]="!selectedId() || saving() || !amount()"
-        class="shrink-0 rounded-xl bg-indigo-600 px-6 py-3 font-semibold text-white transition active:scale-95 disabled:opacity-40"
-      >
-        {{ saving() ? '...' : '+ Add' }}
-      </button>
-    </div>
-    @if (saveError()) {
-      <p class="mt-1 text-xs text-red-600">{{ saveError() }}</p>
-    }
-    @if (!selectedId()) {
-      <p class="mt-1 text-xs text-gray-400">Selecione uma categoria acima</p>
-    }
-  </div>
-
   <!-- Despesas do mês -->
   @if (expenses().length > 0) {
-    <h2 class="mb-2 mt-4 text-sm font-semibold uppercase tracking-wide text-gray-400">Despesas do mês</h2>
+    <h2 class="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-400">Despesas do mês</h2>
     <ul class="divide-y divide-gray-100 rounded-xl bg-white shadow-sm">
       @for (e of expenses(); track e.id) {
         <li class="flex items-center justify-between px-4 py-3">
-          <div>
-            <span class="font-medium text-gray-800">{{ e.category?.name ?? '—' }}</span>
-            <span class="ml-2 text-xs text-gray-400">{{ e.expense_date | date:'dd/MM' }}</span>
+          <div class="min-w-0">
+            <div class="truncate">
+              <span class="font-medium text-gray-800">{{ e.category?.name ?? '—' }}</span>
+              @if (e.name) {
+                <span class="ml-2 text-xs text-gray-500">{{ e.name }}</span>
+              }
+            </div>
+            <span class="text-xs text-gray-400">{{ e.expense_date | date:'dd/MM' }}</span>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex shrink-0 items-center gap-3">
             <span class="font-semibold text-gray-900">{{ e.amount | currency:'BRL':'symbol':'1.2-2' }}</span>
             <button (click)="remove(e.id)" class="text-gray-300 hover:text-red-500" aria-label="Excluir">✕</button>
           </div>
@@ -133,3 +80,165 @@
     </ul>
   }
 </div>
+
+<!-- ===== Modal: nova despesa ===== -->
+@if (expenseModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" (click)="closeExpenseModal()">
+    <div class="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900">
+          Nova despesa @if (selected(); as sel) {<span class="text-indigo-600">· {{ sel.name }}</span>}
+        </h3>
+        <button (click)="closeExpenseModal()" class="text-2xl leading-none text-gray-400 hover:text-gray-600" aria-label="Fechar">×</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="flex gap-2">
+          <label class="w-36 shrink-0">
+            <span class="mb-1 block text-xs font-medium text-gray-500">Data</span>
+            <input
+              type="date"
+              [value]="date()"
+              (input)="date.set($any($event.target).value)"
+              class="w-full rounded-xl border border-gray-300 px-2 py-3 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none"
+            />
+          </label>
+          <label class="w-full">
+            <span class="mb-1 block text-xs font-medium text-gray-500">Valor (R$)</span>
+            <input
+              #amountBox
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              min="0"
+              [value]="amount()"
+              (input)="amount.set($any($event.target).value)"
+              (keyup.enter)="add()"
+              placeholder="0,00"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 text-lg focus:border-indigo-500 focus:outline-none"
+            />
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="mb-1 block text-xs font-medium text-gray-500">Descrição (opcional)</span>
+          <input
+            type="text"
+            [value]="description()"
+            (input)="description.set($any($event.target).value)"
+            (keyup.enter)="add()"
+            placeholder="Ex: compras da semana"
+            class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+          />
+        </label>
+
+        @if (saveError()) {
+          <p class="text-xs text-red-600">{{ saveError() }}</p>
+        }
+
+        <button
+          (click)="add()"
+          [disabled]="saving() || !amount()"
+          class="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition active:scale-95 disabled:opacity-40"
+        >
+          {{ saving() ? 'Salvando...' : 'Adicionar despesa' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Modal: gerenciar categorias ===== -->
+@if (categoriesModalOpen()) {
+  <div class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" (click)="closeCategoriesModal()">
+    <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl" (click)="$event.stopPropagation()">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-bold text-gray-900">Categorias</h3>
+        <button (click)="closeCategoriesModal()" class="text-2xl leading-none text-gray-400 hover:text-gray-600" aria-label="Fechar">×</button>
+      </div>
+
+      @if (editingCategoryId() === null) {
+        <!-- Lista -->
+        <ul class="divide-y divide-gray-100 rounded-xl border border-gray-100">
+          @for (c of categories(); track c.id) {
+            <li class="flex items-center justify-between px-4 py-3">
+              <div>
+                <span class="font-medium text-gray-800">{{ c.name }}</span>
+                <span class="ml-2 text-xs text-gray-400">
+                  limite: @if (c.max_monthly_amount > 0) { {{ c.max_monthly_amount | currency:'BRL':'symbol':'1.2-2' }} } @else { — }
+                </span>
+              </div>
+              <button (click)="startEditCategory(c.id)" class="text-sm text-indigo-600 hover:underline">Editar</button>
+            </li>
+          }
+        </ul>
+
+        <button
+          (click)="startEditCategory(null)"
+          class="mt-4 w-full rounded-xl border-2 border-dashed border-indigo-300 py-3 font-semibold text-indigo-600 transition active:scale-95"
+        >
+          + Nova categoria
+        </button>
+      } @else {
+        <!-- Form -->
+        <div class="space-y-3">
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-gray-500">Nome</span>
+            <input
+              type="text"
+              [value]="catName()"
+              (input)="catName.set($any($event.target).value)"
+              (keyup.enter)="saveCategory()"
+              placeholder="Ex: Mercado"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+            />
+          </label>
+
+          <label class="block">
+            <span class="mb-1 block text-xs font-medium text-gray-500">Limite mensal (R$)</span>
+            <input
+              type="number"
+              inputmode="decimal"
+              step="0.01"
+              min="0"
+              [value]="catMax()"
+              (input)="catMax.set($any($event.target).value)"
+              (keyup.enter)="saveCategory()"
+              placeholder="0 = sem limite"
+              class="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+            />
+          </label>
+
+          @if (catError()) {
+            <p class="text-xs text-red-600">{{ catError() }}</p>
+          }
+
+          <div class="flex gap-2">
+            <button
+              (click)="saveCategory()"
+              [disabled]="catSaving()"
+              class="w-full rounded-xl bg-indigo-600 py-3 font-semibold text-white transition active:scale-95 disabled:opacity-40"
+            >
+              {{ catSaving() ? 'Salvando...' : 'Salvar' }}
+            </button>
+            <button
+              (click)="startEditCategory(null)"
+              class="shrink-0 rounded-xl bg-gray-100 px-5 py-3 font-semibold text-gray-600 transition active:scale-95"
+            >
+              Cancelar
+            </button>
+          </div>
+
+          @if (editingCategoryId()) {
+            <button
+              (click)="deleteCategory(editingCategoryId()!)"
+              class="w-full rounded-xl py-2 text-sm text-red-500 hover:bg-red-50"
+            >
+              Excluir categoria
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}
