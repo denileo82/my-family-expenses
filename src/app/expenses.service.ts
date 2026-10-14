@@ -21,6 +21,7 @@ export class ExpensesService {
           .from('expense')
           .select('*, category(*)')
           .gte('expense_date', this.toDateStr(monthStart))
+          .lt('expense_date', this.toDateStr(new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 1)))
           .order('expense_date', { ascending: false })
           .order('created_at', { ascending: false }),
       ]);
