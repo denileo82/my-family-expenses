@@ -16,7 +16,7 @@ export class ExpensesService {
     try {
       const monthStart = this.currentMonth();
       const [catRes, expRes] = await Promise.all([
-        supabase.from('category').select('*').order('id'),
+        supabase.from('category').select('*').order('sort_order').order('name'),
         supabase
           .from('expense')
           .select('*, category(*)')
@@ -82,6 +82,17 @@ export class ExpensesService {
   async deleteCategory(categoryId: string): Promise<void> {
     const { error } = await supabase.from('category').delete().eq('id', categoryId);
     if (error) throw error;
+    await this.load();
+  }
+
+  async reorder(ids: string[]): Promise<void> {
+    // Atualiza sort_order de cada categoria na nova ordem
+    const updates = ids.map((id, index) =>
+      supabase.from('category').update({ sort_order: index }).eq('id', id),
+    );
+    const results = await Promise.all(updates);
+    const firstError = results.find((r) => r.error)?.error;
+    if (firstError) throw firstError;
     await this.load();
   }
 

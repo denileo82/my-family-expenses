@@ -2,6 +2,7 @@ export interface Category {
   id: string;
   name: string;
   max_monthly_amount: number;
+  sort_order: number;
   created_at?: string;
 }
 

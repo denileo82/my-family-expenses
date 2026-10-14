@@ -244,14 +244,28 @@
 
       @if (editingCategoryId() === null) {
         <!-- Lista -->
+        <p class="mb-2 text-xs text-gray-400">Arraste para reordenar · toque em Editar para alterar</p>
         <ul class="divide-y divide-gray-100 rounded-xl border border-gray-100">
-          @for (c of categories(); track c.id) {
-            <li class="flex items-center justify-between px-4 py-3">
-              <div>
-                <span class="font-medium text-gray-800">{{ c.name }}</span>
-                <span class="ml-2 text-xs text-gray-400">
-                  limite: @if (c.max_monthly_amount > 0) { {{ c.max_monthly_amount | currency:'BRL':'symbol':'1.2-2' }} } @else { — }
-                </span>
+          @for (c of categories(); track c.id; let i = $index) {
+            <li
+              draggable="true"
+              (dragstart)="onDragStart(i)"
+              (dragover)="onDragOver(i); $event.preventDefault()"
+              (drop)="onDrop(i)"
+              (dragend)="onDragEnd()"
+              class="flex items-center justify-between px-4 py-3"
+              [class.bg-indigo-50]="dragIndex() === i"
+              [class.border-t-2]="dragOverIndex() === i && dragIndex() !== i"
+              [class.border-indigo-400]="dragOverIndex() === i && dragIndex() !== i"
+            >
+              <div class="flex items-center gap-2">
+                <span class="cursor-grab text-gray-300 select-none">⠿</span>
+                <div>
+                  <span class="font-medium text-gray-800">{{ c.name }}</span>
+                  <span class="ml-2 text-xs text-gray-400">
+                    limite: @if (c.max_monthly_amount > 0) { {{ c.max_monthly_amount | currency:'BRL':'symbol':'1.2-2' }} } @else { — }
+                  </span>
+                </div>
               </div>
               <button (click)="startEditCategory(c.id)" class="text-sm text-indigo-600 hover:underline">Editar</button>
             </li>

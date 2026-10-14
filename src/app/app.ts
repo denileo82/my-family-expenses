@@ -203,6 +203,39 @@ export class App {
     }
   }
 
+  // ===== Drag & drop de categorias =====
+  dragIndex = signal<number | null>(null);
+  dragOverIndex = signal<number | null>(null);
+
+  onDragStart(index: number): void {
+    this.dragIndex.set(index);
+  }
+
+  onDragOver(index: number): void {
+    this.dragOverIndex.set(index);
+  }
+
+  onDrop(index: number): void {
+    const from = this.dragIndex();
+    this.dragOverIndex.set(null);
+    if (from === null || from === index) {
+      this.dragIndex.set(null);
+      return;
+    }
+    const list = [...this.categories()];
+    const [moved] = list.splice(from, 1);
+    list.splice(index, 0, moved);
+    // Atualiza localmente para feedback imediato
+    this.categories.set(list.map((c, i) => ({ ...c, sort_order: i })));
+    this.dragIndex.set(null);
+    this.service.reorder(list.map((c) => c.id)).catch(() => this.service.load());
+  }
+
+  onDragEnd(): void {
+    this.dragIndex.set(null);
+    this.dragOverIndex.set(null);
+  }
+
   // ===== Helpers =====
   barColor(c: CategoryWithSpent): string {
     if (c.max_monthly_amount <= 0) return 'bg-gray-300';
