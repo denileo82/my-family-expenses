@@ -1,6 +1,7 @@
-import { Component, computed, inject, signal, viewChild, ElementRef } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild, ElementRef } from '@angular/core';
 import { CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { ExpensesService } from './expenses.service';
+import { AuthService } from './auth.service';
 import { CategoryWithSpent } from './models';
 
 @Component({
@@ -11,6 +12,17 @@ import { CategoryWithSpent } from './models';
 })
 export class App {
   private service = inject(ExpensesService);
+  private auth = inject(AuthService);
+
+  // Auth
+  session = this.auth.session;
+  initializing = this.auth.initializing;
+  email = signal('');
+  password = signal('');
+  authMode = signal<'login' | 'signup'>('login');
+  authBusy = signal(false);
+  authError = signal<string | null>(null);
+  authMessage = signal<string | null>(null);
 
   categories = this.service.categories;
   expenses = this.service.expenses;
@@ -57,7 +69,44 @@ export class App {
   }
 
   constructor() {
-    this.service.load();
+    // Carrega os dados quando houver sessão (e recarrega ao logar)
+    effect(() => {
+      if (this.session()) {
+        this.service.load();
+      }
+    });
+  }
+
+  async submitAuth(): Promise<void> {
+    const email = this.email().trim();
+    const password = this.password();
+    if (!email || !password) return;
+    this.authBusy.set(true);
+    this.authError.set(null);
+    this.authMessage.set(null);
+    try {
+      if (this.authMode() === 'signup') {
+        await this.auth.signUp(email, password);
+        this.authMessage.set('Cadastro criado! Verifique seu e-mail para confirmar (se necessário) e faça login.');
+        this.authMode.set('login');
+      } else {
+        await this.auth.signIn(email, password);
+      }
+    } catch (e: any) {
+      this.authError.set(e.message ?? 'Erro de autenticação');
+    } finally {
+      this.authBusy.set(false);
+    }
+  }
+
+  async logout(): Promise<void> {
+    await this.auth.signOut();
+  }
+
+  toggleAuthMode(): void {
+    this.authMode.set(this.authMode() === 'login' ? 'signup' : 'login');
+    this.authError.set(null);
+    this.authMessage.set(null);
   }
 
   // ===== Despesa =====
