@@ -41,6 +41,7 @@ export class App {
 
   // Modal de categorias
   categoriesModalOpen = signal(false);
+  catFormOpen = signal(false);
   editingCategoryId = signal<string | null>(null); // null = nova categoria
   catName = signal('');
   catMax = signal('');
@@ -122,7 +123,9 @@ export class App {
     this.description.set('');
     this.saveError.set(null);
     this.expenseModalOpen.set(true);
-    setTimeout(() => this.amountInput()?.nativeElement.focus());
+    setTimeout(() =>
+      requestAnimationFrame(() => this.amountInput()?.nativeElement.focus()),
+    );
   }
 
   closeExpenseModal(): void {
@@ -152,7 +155,7 @@ export class App {
 
   // ===== Categorias =====
   openCategoriesModal(): void {
-    this.editingCategoryId.set(null);
+    this.catFormOpen.set(false);
     this.catError.set(null);
     this.categoriesModalOpen.set(true);
   }
@@ -162,6 +165,7 @@ export class App {
   }
 
   startEditCategory(id: string | null): void {
+    this.catFormOpen.set(true);
     this.editingCategoryId.set(id);
     this.catError.set(null);
     if (id) {
@@ -172,6 +176,11 @@ export class App {
       this.catName.set('');
       this.catMax.set('');
     }
+  }
+
+  closeCatForm(): void {
+    this.catFormOpen.set(false);
+    this.catError.set(null);
   }
 
   async saveCategory(): Promise<void> {
@@ -190,7 +199,7 @@ export class App {
       } else {
         await this.service.createCategory(name, max);
       }
-      this.editingCategoryId.set(null);
+      this.catFormOpen.set(false);
     } catch (e: any) {
       this.catError.set(e.message ?? 'Erro ao salvar');
     } finally {
@@ -202,7 +211,7 @@ export class App {
     if (!confirm('Excluir categoria e todas as suas despesas?')) return;
     try {
       await this.service.deleteCategory(id);
-      this.editingCategoryId.set(null);
+      this.catFormOpen.set(false);
     } catch (e: any) {
       this.catError.set(e.message ?? 'Erro ao excluir');
     }

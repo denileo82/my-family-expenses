@@ -210,7 +210,7 @@
               (input)="amount.set($any($event.target).value)"
               (keyup.enter)="add()"
               placeholder="0,00"
-              class="w-full rounded-xl border border-gray-300 px-4 py-3 text-lg focus:border-indigo-500 focus:outline-none"
+              class="w-full rounded-xl border border-gray-300 px-2 py-3 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </label>
         </div>
@@ -252,7 +252,7 @@
         <button (click)="closeCategoriesModal()" class="text-2xl leading-none text-gray-400 hover:text-gray-600" aria-label="Fechar">×</button>
       </div>
 
-      @if (editingCategoryId() === null) {
+      @if (!catFormOpen()) {
         <!-- Lista -->
         <p class="mb-2 text-xs text-gray-400">Arraste para reordenar · toque em Editar para alterar</p>
         <ul class="divide-y divide-gray-100 rounded-xl border border-gray-100">
@@ -330,7 +330,7 @@
               {{ catSaving() ? 'Salvando...' : 'Salvar' }}
             </button>
             <button
-              (click)="startEditCategory(null)"
+              (click)="closeCatForm()"
               class="shrink-0 rounded-xl bg-gray-100 px-5 py-3 font-semibold text-gray-600 transition active:scale-95"
             >
               Cancelar
