@@ -248,18 +248,17 @@
         <ul class="divide-y divide-gray-100 rounded-xl border border-gray-100">
           @for (c of categories(); track c.id; let i = $index) {
             <li
-              draggable="true"
-              (dragstart)="onDragStart(i)"
-              (dragover)="onDragOver(i); $event.preventDefault()"
-              (drop)="onDrop(i)"
-              (dragend)="onDragEnd()"
+              [attr.data-cat-index]="i"
               class="flex items-center justify-between px-4 py-3"
               [class.bg-indigo-50]="dragIndex() === i"
               [class.border-t-2]="dragOverIndex() === i && dragIndex() !== i"
               [class.border-indigo-400]="dragOverIndex() === i && dragIndex() !== i"
             >
               <div class="flex items-center gap-2">
-                <span class="cursor-grab text-gray-300 select-none">⠿</span>
+                <span
+                  class="cursor-grab touch-none text-gray-300 select-none"
+                  (pointerdown)="startDrag($event, i)"
+                >⠿</span>
                 <div>
                   <span class="font-medium text-gray-800">{{ c.name }}</span>
                   <span class="ml-2 text-xs text-gray-400">

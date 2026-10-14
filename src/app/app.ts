@@ -203,37 +203,42 @@ export class App {
     }
   }
 
-  // ===== Drag & drop de categorias =====
+  // ===== Drag & drop de categorias (Pointer Events: funciona em touch e mouse) =====
   dragIndex = signal<number | null>(null);
   dragOverIndex = signal<number | null>(null);
 
-  onDragStart(index: number): void {
+  startDrag(e: PointerEvent, index: number): void {
+    e.preventDefault();
     this.dragIndex.set(index);
-  }
-
-  onDragOver(index: number): void {
     this.dragOverIndex.set(index);
+
+    const move = (ev: PointerEvent) => {
+      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
+      const li = el?.closest('[data-cat-index]');
+      if (li) this.dragOverIndex.set(Number(li.getAttribute('data-cat-index')));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      this.commitDrag(this.dragOverIndex());
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
   }
 
-  onDrop(index: number): void {
+  private commitDrag(index: number | null): void {
     const from = this.dragIndex();
+    this.dragIndex.set(null);
     this.dragOverIndex.set(null);
-    if (from === null || from === index) {
-      this.dragIndex.set(null);
-      return;
-    }
+    if (from === null || index === null || from === index) return;
     const list = [...this.categories()];
     const [moved] = list.splice(from, 1);
     list.splice(index, 0, moved);
     // Atualiza localmente para feedback imediato
     this.categories.set(list.map((c, i) => ({ ...c, sort_order: i })));
-    this.dragIndex.set(null);
     this.service.reorder(list.map((c) => c.id)).catch(() => this.service.load());
-  }
-
-  onDragEnd(): void {
-    this.dragIndex.set(null);
-    this.dragOverIndex.set(null);
   }
 
   // ===== Helpers =====
