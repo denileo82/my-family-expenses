@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["src/app/app.css"],
-  "sourcesContent": ["/* Estilos globais do componente App (Tailwind é usado nas classes do template) */\n\n/* Esconde o modal mantendo o input focável (necessário para o teclado abrir no iOS).\n   `display:none` removeria o input do fluxo e impediria o foco síncrono no gesto. */\n.modal-hidden {\n  opacity: 0;\n  pointer-events: none;\n}"],
-  "mappings": ";AAIA,CAAA;AACE,WAAA;AACA,kBAAA;AACF;",
-  "names": []
-}
