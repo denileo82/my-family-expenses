@@ -77,6 +77,7 @@ export class App {
   }
 
   async remove(id: string): Promise<void> {
+    if (!confirm('Excluir este lançamento?')) return;
     await this.service.deleteExpense(id);
   }
 
