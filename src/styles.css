@@ -1,2 +1,7 @@
 /* Tailwind CSS v4 */
 @import "tailwindcss";
+
+/* Respeita o notch/safe-area em modo fullscreen (PWA) */
+.safe-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
+}
