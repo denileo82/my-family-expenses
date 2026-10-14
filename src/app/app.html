@@ -92,10 +92,20 @@
       >›</button>
     </div>
 
-    <p class="mt-1 text-right text-base text-gray-500">
-      Total gasto:
-      <span class="text-lg font-bold text-gray-800">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
-    </p>
+    <div class="mt-1 text-right">
+      <p class="text-base text-gray-500">
+        Total gasto:
+        <span class="text-lg font-bold text-gray-800">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
+      </p>
+      @if (totalLimit() > 0) {
+        <p class="text-xs text-gray-400">
+          de {{ totalLimit() | currency:'BRL':'symbol':'1.2-2' }} ·
+          <span
+            [class]="totalPercent() >= 100 ? 'font-semibold text-red-600' : (totalPercent() >= 70 ? 'font-semibold text-yellow-600' : 'font-semibold text-emerald-600')"
+          >{{ totalPercent() | number:'1.0-0' }}% gasto</span>
+        </p>
+      }
+    </div>
   </header>
 
   @if (error()) {

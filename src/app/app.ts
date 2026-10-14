@@ -1,12 +1,12 @@
 import { Component, computed, effect, inject, signal, viewChild, ElementRef } from '@angular/core';
-import { CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/common';
 import { ExpensesService } from './expenses.service';
 import { AuthService } from './auth.service';
 import { CategoryWithSpent } from './models';
 
 @Component({
   selector: 'app-root',
-  imports: [CurrencyPipe, DatePipe, TitleCasePipe],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, TitleCasePipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -52,6 +52,11 @@ export class App {
   );
 
   totalSpent = computed(() => this.expenses().reduce((s, e) => s + Number(e.amount), 0));
+  totalLimit = computed(() => this.categories().reduce((s, c) => s + (Number(c.max_monthly_amount) || 0), 0));
+  totalPercent = computed(() => {
+    const limit = this.totalLimit();
+    return limit > 0 ? Math.min((this.totalSpent() / limit) * 100, 100) : 0;
+  });
 
   monthLabel = computed(() => {
     const m = this.service.currentMonth();
