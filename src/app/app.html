@@ -63,7 +63,10 @@
 <div class="safe-top mx-auto max-w-md min-h-screen bg-gray-50 px-4 pb-10">
   <header class="mb-4">
     <div class="flex items-start justify-between">
-      <h1 class="text-2xl font-bold text-gray-900">💸 Despesas</h1>
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">💸 Despesas</h1>
+        <p class="text-[9px] leading-none text-gray-300">build {{ buildTime }}</p>
+      </div>
       <div class="flex gap-2">
         <button
           (click)="openCategoriesModal()"

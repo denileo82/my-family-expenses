@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prebuild": "node scripts/write-build-info.js",
     "start": "node server.js",
     "serve": "ng serve",
     "build": "ng build",

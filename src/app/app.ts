@@ -3,6 +3,7 @@ import { CurrencyPipe, DatePipe, DecimalPipe, TitleCasePipe } from '@angular/com
 import { ExpensesService } from './expenses.service';
 import { AuthService } from './auth.service';
 import { CategoryWithSpent } from './models';
+import { BUILD_TIME } from './build-info';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +14,8 @@ import { CategoryWithSpent } from './models';
 export class App {
   private service = inject(ExpensesService);
   private auth = inject(AuthService);
+
+  buildTime = BUILD_TIME;
 
   // Auth
   session = this.auth.session;
