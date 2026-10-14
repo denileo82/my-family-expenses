@@ -32,7 +32,14 @@ app.use((req, res) => {
   }
 });
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+const port = Number(process.env.PORT) || Number(process.env.SERVER_PORT) || 3000;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`[myfamily-expenses] Server running on 0.0.0.0:${port}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('[myfamily-expenses] uncaughtException:', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('[myfamily-expenses] unhandledRejection:', err);
 });
