@@ -43,3 +43,11 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 node_modules/
+.claude/
+.codex/
+.claude.json
+.codex.json
+.bonto/
+.webslop/
+.mcp.json
+AGENTS.md
