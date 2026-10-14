@@ -123,9 +123,9 @@ export class App {
     this.description.set('');
     this.saveError.set(null);
     this.expenseModalOpen.set(true);
-    setTimeout(() =>
-      requestAnimationFrame(() => this.amountInput()?.nativeElement.focus()),
-    );
+    // Foco síncrono: o iOS só abre o teclado dentro do gesto do usuário.
+    // O modal está sempre no DOM (escondido via CSS), então o input já existe.
+    this.amountInput()?.nativeElement.focus();
   }
 
   closeExpenseModal(): void {
