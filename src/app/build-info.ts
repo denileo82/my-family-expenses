@@ -1,2 +1,2 @@
 // Gerado automaticamente no build — não editar
-export const BUILD_TIME = '2026-10-14 11:07:06 BRT';
+export const BUILD_TIME = '2026-10-14 11:11:21 BRT';

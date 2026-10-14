@@ -7,7 +7,20 @@ const app = express();
 // Angular build output (dist/frontend/browser)
 const distDir = path.join(__dirname, 'dist', 'frontend', 'browser');
 
-app.use(express.static(distDir));
+// index.html sempre sem cache para evitar versão antiga após deploy
+app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.sendFile(path.join(distDir, 'index.html'));
+});
+
+app.use(express.static(distDir, {
+  index: false,
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  },
+}));
 
 // SPA fallback: serve index.html for any route not found
 app.use((req, res) => {

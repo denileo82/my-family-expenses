@@ -16,5 +16,13 @@
 </head>
 <body>
   <app-root></app-root>
+  <script>
+    // Remove service workers antigos (causavam 404/tela branca após deploys)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        rs.forEach(function (r) { r.unregister(); });
+      });
+    }
+  </script>
 </body>
 </html>
