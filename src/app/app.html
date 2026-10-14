@@ -1,18 +1,31 @@
 <div class="mx-auto max-w-md min-h-screen bg-gray-50 px-4 pb-10 pt-6">
-  <header class="mb-4 flex items-start justify-between">
-    <div>
+  <header class="mb-4">
+    <div class="flex items-start justify-between">
       <h1 class="text-2xl font-bold text-gray-900">💸 Despesas</h1>
-      <p class="text-sm text-gray-500">
-        Total gasto no mês:
-        <span class="font-semibold text-gray-700">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
-      </p>
+      <button
+        (click)="openCategoriesModal()"
+        class="rounded-lg border border-gray-200 bg-white p-2 text-gray-500 shadow-sm transition active:scale-95 hover:text-indigo-600"
+        aria-label="Gerenciar categorias"
+        title="Gerenciar categorias"
+      >⚙️</button>
     </div>
-    <button
-      (click)="openCategoriesModal()"
-      class="rounded-lg border border-gray-200 bg-white p-2 text-gray-500 shadow-sm transition active:scale-95 hover:text-indigo-600"
-      aria-label="Gerenciar categorias"
-      title="Gerenciar categorias"
-    >⚙️</button>
+
+    <!-- Navegação de mês -->
+    <div class="mt-2 flex items-center justify-between rounded-xl bg-white px-2 py-1.5 shadow-sm">
+      <button (click)="prevMonth()" class="rounded-lg px-3 py-1 text-lg text-gray-500 hover:bg-gray-100" aria-label="Mês anterior">‹</button>
+      <span class="text-sm font-semibold capitalize text-gray-700">{{ monthLabel() | titlecase }}</span>
+      <button
+        (click)="nextMonth()"
+        [disabled]="isCurrentMonth()"
+        class="rounded-lg px-3 py-1 text-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+        aria-label="Próximo mês"
+      >›</button>
+    </div>
+
+    <p class="mt-1 text-sm text-gray-500">
+      Total gasto:
+      <span class="font-semibold text-gray-700">{{ totalSpent() | currency:'BRL':'symbol':'1.2-2' }}</span>
+    </p>
   </header>
 
   @if (error()) {
@@ -42,7 +55,9 @@
           <div class="mt-1 text-[11px] text-gray-500">
             @if (c.remaining > 0) {
               faltam {{ c.remaining | currency:'BRL':'symbol':'1.2-2' }}
-              · {{ c.perDay | currency:'BRL':'symbol':'1.2-2' }}/dia
+              @if (isCurrentMonth()) {
+                · {{ c.perDay | currency:'BRL':'symbol':'1.2-2' }}/dia
+              }
             } @else {
               limite estourado
             }
@@ -58,7 +73,7 @@
 
   <!-- Despesas do mês -->
   @if (expenses().length > 0) {
-    <h2 class="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-400">Despesas do mês</h2>
+    <h2 class="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-gray-400">Despesas de {{ monthLabel() | titlecase }}</h2>
     <ul class="divide-y divide-gray-100 rounded-xl bg-white shadow-sm">
       @for (e of expenses(); track e.id) {
         <li class="flex items-center justify-between px-4 py-3">

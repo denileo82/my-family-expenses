@@ -1,11 +1,11 @@
 import { Component, computed, inject, signal, viewChild, ElementRef } from '@angular/core';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe, TitleCasePipe } from '@angular/common';
 import { ExpensesService } from './expenses.service';
 import { CategoryWithSpent } from './models';
 
 @Component({
   selector: 'app-root',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, TitleCasePipe],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
@@ -40,6 +40,21 @@ export class App {
   );
 
   totalSpent = computed(() => this.expenses().reduce((s, e) => s + Number(e.amount), 0));
+
+  monthLabel = computed(() => {
+    const m = this.service.currentMonth();
+    return m.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  });
+
+  isCurrentMonth = computed(() => this.service.isCurrentMonth());
+
+  prevMonth(): void {
+    this.service.shiftMonth(-1);
+  }
+
+  nextMonth(): void {
+    this.service.shiftMonth(1);
+  }
 
   constructor() {
     this.service.load();

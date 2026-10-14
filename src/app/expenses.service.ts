@@ -8,12 +8,13 @@ export class ExpensesService {
   expenses = signal<Expense[]>([]);
   loading = signal(false);
   error = signal<string | null>(null);
+  currentMonth = signal(this.monthStart());
 
   async load(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
     try {
-      const monthStart = this.monthStart();
+      const monthStart = this.currentMonth();
       const [catRes, expRes] = await Promise.all([
         supabase.from('category').select('*').order('id'),
         supabase
@@ -83,10 +84,22 @@ export class ExpensesService {
     await this.load();
   }
 
-  private compute(categories: Category[], expenses: Expense[]): CategoryWithSpent[] {
+  isCurrentMonth(): boolean {
     const now = new Date();
-    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    const daysLeft = daysInMonth - now.getDate() + 1;
+    const m = this.currentMonth();
+    return m.getFullYear() === now.getFullYear() && m.getMonth() === now.getMonth();
+  }
+
+  shiftMonth(delta: number): void {
+    const m = this.currentMonth();
+    this.currentMonth.set(new Date(m.getFullYear(), m.getMonth() + delta, 1));
+    this.load();
+  }
+
+  private compute(categories: Category[], expenses: Expense[]): CategoryWithSpent[] {
+    const view = this.currentMonth();
+    const daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+    const daysLeft = this.isCurrentMonth() ? daysInMonth - new Date().getDate() + 1 : 0;
 
     return categories.map((c) => {
       const spent = expenses
@@ -98,7 +111,7 @@ export class ExpensesService {
         ...c,
         spent,
         remaining,
-        perDay: max > 0 ? remaining / daysLeft : 0,
+        perDay: max > 0 && daysLeft > 0 ? remaining / daysLeft : 0,
         percent: max > 0 ? Math.min((spent / max) * 100, 100) : 0,
       };
     });
