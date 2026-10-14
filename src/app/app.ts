@@ -127,8 +127,11 @@ export class App {
     this.saveError.set(null);
     this.expenseModalOpen.set(true);
     // Foco síncrono: o iOS só abre o teclado dentro do gesto do usuário.
-    // O modal está sempre no DOM (escondido via CSS), então o input já existe.
     this.amountInput()?.nativeElement.focus();
+    // Fallback: o modal é escondido via `class.hidden` (display:none), então o
+    // foco síncrono acima falha enquanto o Angular ainda não removeu a classe.
+    // Adiamos o foco para depois da atualização do DOM (change detection).
+    setTimeout(() => this.amountInput()?.nativeElement.focus(), 100);
   }
 
   closeExpenseModal(): void {
