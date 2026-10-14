@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal, viewChild, ElementRef } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ExpensesService } from './expenses.service';
 import { CategoryWithSpent } from './models';
@@ -18,6 +18,7 @@ export class App {
   error = this.service.error;
 
   selectedId = signal<string | null>(null);
+  private amountInput = viewChild<ElementRef<HTMLInputElement>>('amountBox');
   amount = signal('');
   saving = signal(false);
   saveError = signal<string | null>(null);
@@ -37,6 +38,12 @@ export class App {
   select(id: string): void {
     this.selectedId.set(id);
     this.saveError.set(null);
+    // Foca a caixa de valor após a renderização
+    setTimeout(() => {
+      const input = this.amountInput()?.nativeElement;
+      input?.focus();
+      input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }
 
   onAmountInput(value: string): void {
