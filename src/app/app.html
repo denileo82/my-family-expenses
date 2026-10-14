@@ -208,12 +208,10 @@
             <span class="mb-1 block text-xs font-medium text-gray-500">Valor (R$)</span>
             <input
               #amountBox
-              type="number"
+              type="text"
               inputmode="decimal"
-              step="0.01"
-              min="0"
               [value]="amount()"
-              (input)="amount.set($any($event.target).value)"
+              (input)="onAmountInput($event)"
               (keyup.enter)="add()"
               placeholder="0,00"
               class="w-full rounded-xl border border-gray-300 px-2 py-3 text-sm focus:border-indigo-500 focus:outline-none"

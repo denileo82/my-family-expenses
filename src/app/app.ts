@@ -136,9 +136,27 @@ export class App {
     this.expenseModalOpen.set(false);
   }
 
+  // Máscara de moeda (BRL): mantém só dígitos e formata como "1.234,56".
+  onAmountInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '');
+    if (!digits) {
+      this.amount.set('');
+      input.value = '';
+      return;
+    }
+    const cents = parseInt(digits, 10);
+    const formatted = (cents / 100).toLocaleString('pt-BR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    this.amount.set(formatted);
+    input.value = formatted;
+  }
+
   async add(): Promise<void> {
     const id = this.selectedId();
-    const value = Number(this.amount().replace(',', '.'));
+    const value = Number(this.amount().replace(/\./g, '').replace(',', '.'));
     if (!id || !value || value <= 0) return;
     this.saving.set(true);
     this.saveError.set(null);
