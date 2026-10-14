@@ -19,7 +19,8 @@ export class ExpensesService {
         supabase
           .from('expense')
           .select('*, category(*)')
-          .gte('created_at', monthStart.toISOString())
+          .gte('expense_date', this.toDateStr(monthStart))
+          .order('expense_date', { ascending: false })
           .order('created_at', { ascending: false }),
       ]);
       if (catRes.error) throw catRes.error;
@@ -36,10 +37,10 @@ export class ExpensesService {
     }
   }
 
-  async addExpense(categoryId: string, amount: number): Promise<void> {
+  async addExpense(categoryId: string, amount: number, expenseDate: string): Promise<void> {
     const { error } = await supabase
       .from('expense')
-      .insert({ category_id: categoryId, amount, name: null });
+      .insert({ category_id: categoryId, amount, expense_date: expenseDate, name: null });
     if (error) throw error;
     await this.load();
   }
@@ -83,5 +84,9 @@ export class ExpensesService {
   private monthStart(): Date {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
+  }
+
+  private toDateStr(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 }

@@ -20,6 +20,7 @@ export class App {
   selectedId = signal<string | null>(null);
   private amountInput = viewChild<ElementRef<HTMLInputElement>>('amountBox');
   amount = signal('');
+  date = signal(this.todayStr());
   saving = signal(false);
   saveError = signal<string | null>(null);
   editingMaxId = signal<string | null>(null);
@@ -57,13 +58,19 @@ export class App {
     this.saving.set(true);
     this.saveError.set(null);
     try {
-      await this.service.addExpense(id, value);
+      await this.service.addExpense(id, value, this.date());
       this.amount.set('');
+      this.date.set(this.todayStr());
     } catch (e: any) {
       this.saveError.set(e.message ?? 'Erro ao salvar');
     } finally {
       this.saving.set(false);
     }
+  }
+
+  private todayStr(): string {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   async remove(id: string): Promise<void> {

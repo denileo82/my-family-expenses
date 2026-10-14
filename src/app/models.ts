@@ -10,6 +10,7 @@ export interface Expense {
   name: string | null;
   category_id: string;
   amount: number;
+  expense_date: string;
   created_at: string;
   category?: Category;
 }
