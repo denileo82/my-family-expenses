@@ -1,6 +1,6 @@
 {
   "configVersion": 1,
-  "timestamp": 1791985671596,
+  "timestamp": 1791986080763,
   "index": "/index.html",
   "assetGroups": [
     {
@@ -38,7 +38,7 @@
     "/icons/apple-touch-icon.png": "24c83c58e1f9bb8eba986ac611863eea615636a4",
     "/icons/icon-192.png": "d5b1fe161e2dc8295c3f78cf97c748378f75b076",
     "/icons/icon-512.png": "19036ee16e2a6b06c4b4a9bf49feeb3ed58d3ac0",
-    "/index.html": "49ad8ce8b918e03f9b6789974f0cb0987787cb2f",
+    "/index.html": "2930c0f007de34c90f0cfbaeda1be5be830074ab",
     "/manifest.webmanifest": "413462b38f453ca8392ed34fbf7c61127fba048f"
   },
   "navigationUrls": [

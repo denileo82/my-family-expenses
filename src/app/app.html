@@ -201,7 +201,7 @@
               type="date"
               [value]="date()"
               (input)="date.set($any($event.target).value)"
-              class="w-full rounded-xl border border-gray-300 px-2 py-3 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none"
+              class="h-11 w-full min-w-0 rounded-xl border border-gray-300 px-2 text-sm text-gray-700 focus:border-indigo-500 focus:outline-none"
             />
           </label>
           <label class="min-w-0 flex-1">
@@ -214,7 +214,7 @@
               (input)="onAmountInput($event)"
               (keyup.enter)="add()"
               placeholder="0,00"
-              class="w-full min-w-0 rounded-xl border border-gray-300 px-2 py-3 text-sm focus:border-indigo-500 focus:outline-none"
+              class="h-11 w-full min-w-0 rounded-xl border border-gray-300 px-2 text-sm focus:border-indigo-500 focus:outline-none"
             />
           </label>
         </div>

@@ -5,3 +5,15 @@
 .safe-top {
   padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
 }
+
+/* Normaliza inputs de texto no iOS (Safari aplica -webkit-appearance com altura/padding extras).
+   Não aplicamos em type="date" para não quebrar o date picker nativo do iOS. */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="search"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
