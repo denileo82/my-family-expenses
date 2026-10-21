@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myfamily-expenses
+  namespace: myfamily-expenses
+  labels:
+    app: myfamily-expenses
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myfamily-expenses
+  template:
+    metadata:
+      labels:
+        app: myfamily-expenses
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/denileo82/myfamily-expenses:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "3000"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
