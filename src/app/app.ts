@@ -38,6 +38,7 @@ export class App {
   amount = signal('');
   date = signal(this.todayStr());
   description = signal('');
+  installments = signal(1);
   saving = signal(false);
   saveError = signal<string | null>(null);
   private amountInput = viewChild<ElementRef<HTMLInputElement>>('amountBox');
@@ -69,12 +70,22 @@ export class App {
 
   isCurrentMonth = computed(() => this.service.isCurrentMonth());
 
+  isFutureMonth = computed(() => {
+    const m = this.service.currentMonth();
+    const now = new Date();
+    return m.getFullYear() > now.getFullYear() || (m.getFullYear() === now.getFullYear() && m.getMonth() > now.getMonth());
+  });
+
   prevMonth(): void {
     this.service.shiftMonth(-1);
   }
 
   nextMonth(): void {
     this.service.shiftMonth(1);
+  }
+
+  cycleInstallments(): void {
+    this.installments.set((this.installments() % 12) + 1);
   }
 
   constructor() {
@@ -124,6 +135,7 @@ export class App {
     this.amount.set('');
     this.date.set(this.todayStr());
     this.description.set('');
+    this.installments.set(1);
     this.saveError.set(null);
     this.expenseModalOpen.set(true);
     // Foco síncrono: o iOS só abre o teclado dentro do gesto do usuário.
@@ -158,10 +170,26 @@ export class App {
     const id = this.selectedId();
     const value = Number(this.amount().replace(/\./g, '').replace(',', '.'));
     if (!id || !value || value <= 0) return;
+
+    // Bloqueia lançamento em meses futuros
+    const [yy, mm] = this.date().split('-').map(Number);
+    const now = new Date();
+    if (yy > now.getFullYear() || (yy === now.getFullYear() && mm - 1 > now.getMonth())) {
+      this.saveError.set('Não é possível lançar despesas em meses futuros.');
+      return;
+    }
+
     this.saving.set(true);
     this.saveError.set(null);
     try {
-      await this.service.addExpense(id, value, this.date(), this.description().trim() || null);
+      const name = this.description().trim() || null;
+      const preview = this.installmentPreview();
+      if (preview) {
+        const rows = preview.map((p) => ({ category_id: id, amount: p.amount, expense_date: p.isoDate, name }));
+        await this.service.addExpenses(rows);
+      } else {
+        await this.service.addExpense(id, value, this.date(), name);
+      }
       this.expenseModalOpen.set(false);
     } catch (e: any) {
       this.saveError.set(e.message ?? 'Erro ao salvar');
@@ -169,6 +197,35 @@ export class App {
       this.saving.set(false);
     }
   }
+
+  // Preview das parcelas: valores e datas. Última parcela absorve o resto do arredondamento.
+  installmentPreview = computed(() => {
+    const n = this.installments();
+    const value = Number(this.amount().replace(/\./g, '').replace(',', '.'));
+    if (n <= 1 || !value || value <= 0) return null;
+
+    const [yy, mm, dd] = this.date().split('-').map(Number);
+    const totalCents = Math.round(value * 100);
+    const per = Math.floor(totalCents / n);
+    const last = totalCents - per * (n - 1);
+
+    const items: { label: string; amount: number; dateStr: string; isoDate: string }[] = [];
+    for (let i = 0; i < n; i++) {
+      const cents = i === n - 1 ? last : per;
+      // Mesmo dia do mês selecionado; clamp para o último dia do mês quando não existir (ex: 31/01 -> 28/02)
+      const maxDay = new Date(yy, mm + i, 0).getDate();
+      const day = Math.min(dd, maxDay);
+      const dt = new Date(yy, mm - 1 + i, day);
+      const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+      items.push({
+        label: `${i + 1}/${n}`,
+        amount: cents / 100,
+        dateStr: `${String(dt.getDate()).padStart(2, '0')}/${String(dt.getMonth() + 1).padStart(2, '0')}`,
+        isoDate: iso,
+      });
+    }
+    return items;
+  });
 
   async remove(id: string): Promise<void> {
     if (!confirm('Excluir este lançamento?')) return;

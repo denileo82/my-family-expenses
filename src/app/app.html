@@ -89,11 +89,16 @@
       <span class="text-sm font-semibold capitalize text-gray-700">{{ monthLabel() | titlecase }}</span>
       <button
         (click)="nextMonth()"
-        [disabled]="isCurrentMonth()"
-        class="rounded-lg px-3 py-1 text-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+        class="rounded-lg px-3 py-1 text-lg text-gray-500 hover:bg-gray-100"
         aria-label="Próximo mês"
       >›</button>
     </div>
+
+    @if (isFutureMonth()) {
+      <p class="mt-1 rounded-lg bg-yellow-50 px-3 py-1.5 text-center text-xs text-yellow-700">
+        Visualização de mês futuro — lançamentos bloqueados
+      </p>
+    }
 
     <div class="mt-1 text-right">
       <p class="text-base text-gray-500">
@@ -124,7 +129,8 @@
     @for (c of categories(); track c.id) {
       <button
         (click)="openExpenseModal(c.id)"
-        class="rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition active:scale-95"
+        [disabled]="isFutureMonth()"
+        class="rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span class="font-semibold text-gray-800">{{ c.name }}</span>
 
@@ -218,6 +224,26 @@
             />
           </label>
         </div>
+
+        <button
+          type="button"
+          (click)="cycleInstallments()"
+          class="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 transition active:scale-95 hover:bg-indigo-100"
+        >
+          Parcelamento: {{ installments() }}
+        </button>
+
+        @if (installmentPreview(); as preview) {
+          <ul class="divide-y divide-gray-100 rounded-xl border border-gray-100 bg-gray-50 text-xs">
+            @for (p of preview; track p.label) {
+              <li class="flex items-center justify-between px-3 py-1.5">
+                <span class="text-gray-400">{{ p.label }}</span>
+                <span class="font-medium text-gray-700">{{ p.amount | currency:'BRL':'symbol':'1.2-2' }}</span>
+                <span class="text-gray-400">{{ p.dateStr }}</span>
+              </li>
+            }
+          </ul>
+        }
 
         <label class="block">
           <span class="mb-1 block text-xs font-medium text-gray-500">Descrição (opcional)</span>

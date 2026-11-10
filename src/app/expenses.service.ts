@@ -40,9 +40,13 @@ export class ExpensesService {
   }
 
   async addExpense(categoryId: string, amount: number, expenseDate: string, name: string | null): Promise<void> {
-    const { error } = await supabase
-      .from('expense')
-      .insert({ category_id: categoryId, amount, expense_date: expenseDate, name });
+    await this.addExpenses([{ category_id: categoryId, amount, expense_date: expenseDate, name }]);
+  }
+
+  async addExpenses(
+    rows: { category_id: string; amount: number; expense_date: string; name: string | null }[],
+  ): Promise<void> {
+    const { error } = await supabase.from('expense').insert(rows);
     if (error) throw error;
     await this.load();
   }
