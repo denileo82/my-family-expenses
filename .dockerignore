@@ -1,0 +1,11 @@
+node_modules
+.angular
+dist
+.git
+.github
+.vscode
+k8s
+plans
+*.md
+Dockerfile
+.dockerignore

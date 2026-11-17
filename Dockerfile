@@ -31,11 +31,10 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Copiar arquivos de dependências para instalar apenas deps de produção
-COPY package.json yarn.lock ./
-
-# Instalar apenas dependências de produção (express)
-RUN yarn install --frozen-lockfile --production
+# Copiar package.json para instalar apenas deps de produção (express + supabase)
+# Nota: yarn v1 com --production instalava também as devDeps (2.2GB); npm --omit=dev instala só o necessário
+COPY package.json ./
+RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 
 # Criar usuário não-root
 RUN addgroup --system --gid 1001 nodejs
